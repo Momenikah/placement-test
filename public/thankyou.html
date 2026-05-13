@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registrasi Berhasil – Placement Test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="page">
+
+    <!-- Stepper: step 2 active, step 1 done -->
+    <div class="stepper">
+      <div class="step-item done">
+        <div class="step-dot">✓</div>
+        <span class="step-label">Daftar</span>
+      </div>
+      <div class="step-item active">
+        <div class="step-dot">2</div>
+        <span class="step-label">Konfirmasi</span>
+      </div>
+      <div class="step-item">
+        <div class="step-dot">3</div>
+        <span class="step-label">API Key</span>
+      </div>
+      <div class="step-item">
+        <div class="step-dot">4</div>
+        <span class="step-label">Ketentuan</span>
+      </div>
+      <div class="step-item">
+        <div class="step-dot">5</div>
+        <span class="step-label">Test</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" style="background:linear-gradient(135deg,#059669 0%,#047857 100%);">
+        <span class="icon">🎉</span>
+        <h1>Pendaftaran Berhasil!</h1>
+        <p>Kamu siap untuk memulai speaking test</p>
+      </div>
+
+      <div class="card-body">
+        <!-- Student info -->
+        <div style="background:var(--bg);border-radius:var(--radius-sm);padding:16px;margin-bottom:22px;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-xlight);margin-bottom:10px;">Data Pendaftaran</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span style="font-size:16px;">👤</span>
+              <div>
+                <div style="font-size:15px;font-weight:700;color:var(--text-dark);" id="ty-name">—</div>
+                <div style="font-size:12px;color:var(--text-light);" id="ty-email">—</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span style="font-size:16px;">🏫</span>
+              <div style="font-size:13px;color:var(--text-medium);" id="ty-level">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- What's next -->
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-xlight);margin-bottom:12px;">Langkah Selanjutnya</div>
+        <ul class="next-steps">
+          <li class="next-step-item">
+            <span class="next-step-num">3</span>
+            <span>Masukkan <strong>Gemini API Key</strong> (gratis dari Google AI Studio)</span>
+          </li>
+          <li class="next-step-item">
+            <span class="next-step-num">4</span>
+            <span>Baca dan setujui <strong>syarat & ketentuan</strong> tes</span>
+          </li>
+          <li class="next-step-item">
+            <span class="next-step-num">5</span>
+            <span>Rekam jawaban speaking kamu selama <strong>1–2 menit</strong></span>
+          </li>
+          <li class="next-step-item">
+            <span class="next-step-num">✓</span>
+            <span>Terima <strong>hasil analisis AI</strong> + sertifikat PDF via email</span>
+          </li>
+        </ul>
+
+        <div class="alert alert-info" style="margin-bottom:20px;">
+          <span class="alert-icon">💡</span>
+          <span>Pastikan kamu di tempat yang <strong>tenang</strong> dan mikrofon <strong>berfungsi</strong> sebelum lanjut.</span>
+        </div>
+
+        <button class="btn btn-primary" onclick="goNext()">
+          Test Sekarang →
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const session = JSON.parse(localStorage.getItem('pt_session') || 'null');
+    if (!session?.registrationId) window.location.href = '/';
+
+    document.getElementById('ty-name').textContent = session.name;
+    document.getElementById('ty-email').textContent = session.email || '';
+    document.getElementById('ty-level').textContent =
+      session.educationLevel === 'SD' ? 'SD (Elementary School)' : 'SMP/SMA (Junior/Senior High School)';
+
+    function goNext() { window.location.href = '/apikey'; }
+  </script>
+</body>
+</html>

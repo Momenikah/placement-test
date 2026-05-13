@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Speaking Test – Placement Test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="page">
+
+    <!-- Stepper: step 5 active -->
+    <div class="stepper">
+      <div class="step-item done">
+        <div class="step-dot">✓</div>
+        <span class="step-label">Daftar</span>
+      </div>
+      <div class="step-item done">
+        <div class="step-dot">✓</div>
+        <span class="step-label">Konfirmasi</span>
+      </div>
+      <div class="step-item done">
+        <div class="step-dot">✓</div>
+        <span class="step-label">API Key</span>
+      </div>
+      <div class="step-item done">
+        <div class="step-dot">✓</div>
+        <span class="step-label">Ketentuan</span>
+      </div>
+      <div class="step-item active">
+        <div class="step-dot">5</div>
+        <span class="step-label">Test</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" style="padding:22px 28px 18px;">
+        <h1 style="font-size:18px;">🎙️ Speaking Test</h1>
+        <p id="student-name" style="color:rgba(255,255,255,0.85);font-size:13px;"></p>
+      </div>
+
+      <div class="card-body">
+
+        <!-- Unsupported browser -->
+        <div id="unsupported-warn" style="display:none;" class="alert alert-error">
+          <span class="alert-icon">⚠️</span>
+          <span>Browser kamu tidak mendukung perekaman audio. Gunakan Chrome, Edge, atau Firefox terbaru.</span>
+        </div>
+
+        <!-- Question -->
+        <div class="question-card">
+          <div class="question-label">📝 Pertanyaanmu</div>
+          <div class="question-text" id="question-text">Memuat...</div>
+        </div>
+
+        <!-- Alert -->
+        <div id="alert-box" style="display:none;"></div>
+
+        <!-- ── STATE: IDLE ── -->
+        <div id="state-idle">
+          <ul class="instruction-list" style="margin-bottom:20px;">
+            <li><span class="icon">🗣️</span><span>Jawab pertanyaan di atas dalam bahasa Inggris</span></li>
+            <li><span class="icon">⏱️</span><span>Berbicara minimal <strong>1 menit</strong>, maksimal <strong>2 menit</strong></span></li>
+            <li><span class="icon">🔇</span><span>Pastikan tidak ada suara bising di sekitarmu</span></li>
+          </ul>
+          <button class="btn btn-primary" onclick="startRecording()">
+            🎙️ Mulai Merekam
+          </button>
+        </div>
+
+        <!-- ── STATE: RECORDING ── -->
+        <div id="state-recording" style="display:none;">
+
+          <!-- Countdown ring + number -->
+          <div class="countdown-wrap">
+
+            <div style="font-size:12px;font-weight:600;color:var(--danger);letter-spacing:0.3px;display:flex;align-items:center;gap:6px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--danger);display:inline-block;animation:pulse-rec 1.2s ease infinite;"></span>
+              Sedang Merekam
+            </div>
+
+            <div class="countdown-ring-wrap">
+              <svg width="140" height="140" viewBox="0 0 140 140">
+                <!-- radius = 62, circumference = 2*π*62 ≈ 389.6 -->
+                <circle class="countdown-ring-bg"  cx="70" cy="70" r="62" />
+                <circle class="countdown-ring-arc" cx="70" cy="70" r="62"
+                  id="ring-arc"
+                  stroke-dasharray="389.6"
+                  stroke-dashoffset="0"
+                />
+              </svg>
+              <div class="countdown-num-wrap">
+                <div class="countdown-num" id="countdown-num">2:00</div>
+                <div class="countdown-sub" id="countdown-sub">tersisa</div>
+              </div>
+            </div>
+
+            <div class="countdown-label" id="countdown-label">Terus berbicara! Minimal 1 menit</div>
+
+            <button class="record-btn record-btn-recording" onclick="stopRecording()" title="Hentikan">
+              ⏹️
+            </button>
+
+            <div style="font-size:11px;color:var(--text-xlight);">Tekan untuk berhenti lebih awal</div>
+          </div>
+        </div>
+
+        <!-- ── STATE: REVIEW ── -->
+        <div id="state-review" style="display:none;">
+          <div id="review-ok" style="background:var(--success-light);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+            <span style="font-size:24px;">✅</span>
+            <div>
+              <div style="font-weight:700;font-size:14px;color:#065F46;">Rekaman Selesai!</div>
+              <div id="duration-text" style="font-size:13px;color:#059669;"></div>
+            </div>
+          </div>
+          <div id="review-short" style="display:none;background:var(--warning-light);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+            <span style="font-size:24px;">⚠️</span>
+            <div>
+              <div style="font-weight:700;font-size:14px;color:#92400E;">Durasi Terlalu Pendek</div>
+              <div id="short-text" style="font-size:13px;color:#B45309;"></div>
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-secondary" onclick="resetRecording()">🔄 Rekam Ulang</button>
+            <button class="btn btn-success" id="submit-btn" onclick="submitRecording()">
+              <span id="submit-text">Submit →</span>
+              <span id="submit-spinner" class="spinner" style="display:none;width:16px;height:16px;border-width:2px;border-color:rgba(255,255,255,0.3);border-top-color:#fff;"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── STATE: UPLOADING ── -->
+        <div id="state-uploading" style="display:none;">
+          <div class="spinner-wrap">
+            <div class="spinner"></div>
+            <div class="spinner-text">
+              <strong>Mengupload rekaman...</strong><br>
+              <span style="font-size:12px;">Jangan tutup halaman ini</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 3-2-1 countdown overlay -->
+  <div id="pre-countdown" style="
+    display:none;position:fixed;inset:0;background:rgba(79,70,229,0.93);
+    z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px;
+  ">
+    <div id="pre-num" style="font-size:100px;font-weight:800;color:#fff;line-height:1;"></div>
+    <div style="font-size:16px;color:rgba(255,255,255,0.85);font-weight:500;">Bersiap untuk berbicara...</div>
+  </div>
+
+  <script src="/js/test.js"></script>
+</body>
+</html>

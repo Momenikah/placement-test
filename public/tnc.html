@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Syarat & Ketentuan – Placement Test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="page">
+
+    <!-- Stepper: step 4 active -->
+    <div class="stepper">
+      <div class="step-item done">
+        <div class="step-dot">✓</div>
+        <span class="step-label">Daftar</span>
+      </div>
+      <div class="step-item done">
+        <div class="step-dot">✓</div>
+        <span class="step-label">Konfirmasi</span>
+      </div>
+      <div class="step-item done">
+        <div class="step-dot">✓</div>
+        <span class="step-label">API Key</span>
+      </div>
+      <div class="step-item active">
+        <div class="step-dot">4</div>
+        <span class="step-label">Ketentuan</span>
+      </div>
+      <div class="step-item">
+        <div class="step-dot">5</div>
+        <span class="step-label">Test</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">📋</span>
+        <h1>Syarat &amp; Ketentuan</h1>
+        <p>Baca dan setujui sebelum memulai tes</p>
+      </div>
+
+      <div class="card-body">
+
+        <p style="font-size:13px;color:var(--text-light);margin-bottom:20px;line-height:1.65;">
+          Demi menjaga <strong>integritas dan keakuratan</strong> hasil tes, semua peserta wajib menyetujui ketentuan berikut sebelum melanjutkan.
+        </p>
+
+        <!-- T&C Items -->
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+
+          <label class="tnc-item" id="tnc-1" for="chk-1">
+            <input type="checkbox" id="chk-1" onchange="onCheck()" />
+            <span class="tnc-item-text">
+              <span class="tnc-item-num">📵 Tidak Ada Persiapan</span>
+              Peserta tidak diperkenankan melakukan persiapan dalam bentuk apa pun, seperti mencatat,
+              menggunakan kamus, atau mengakses situs web selama pelaksanaan tes.
+            </span>
+          </label>
+
+          <label class="tnc-item" id="tnc-2" for="chk-2">
+            <input type="checkbox" id="chk-2" onchange="onCheck()" />
+            <span class="tnc-item-text">
+              <span class="tnc-item-num">⚡ Jawaban Spontan</span>
+              Peserta diharapkan mengerjakan soal secara spontan dan langsung tanpa penundaan.
+              Tidak diperbolehkan membaca teks atau skrip yang telah disiapkan sebelumnya.
+            </span>
+          </label>
+
+          <label class="tnc-item" id="tnc-3" for="chk-3">
+            <input type="checkbox" id="chk-3" onchange="onCheck()" />
+            <span class="tnc-item-text">
+              <span class="tnc-item-num">🙋 Mandiri</span>
+              Peserta wajib mengerjakan tes secara mandiri tanpa bantuan dari pihak lain,
+              baik secara langsung maupun melalui alat bantu seperti AI, penerjemah, atau orang lain.
+            </span>
+          </label>
+
+        </div>
+
+        <!-- Progress indicator -->
+        <div id="progress-hint" style="text-align:center;font-size:12px;color:var(--text-xlight);margin-bottom:16px;">
+          Centang semua ketentuan di atas untuk melanjutkan
+        </div>
+
+        <button class="btn btn-primary" id="agree-btn" disabled onclick="agreeAndGo()">
+          ✅ Saya Setuju &amp; Mulai Test →
+        </button>
+
+        <button class="btn btn-secondary w-full" style="margin-top:10px;" onclick="history.back()">
+          ← Kembali
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/js/tnc.js"></script>
+</body>
+</html>

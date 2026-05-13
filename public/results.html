@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hasil Test – Placement Test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .score-card-value.success { color: var(--success); }
+    .score-card-value.warning { color: var(--warning); }
+    .score-card-value.danger  { color: var(--danger); }
+    .score-card-fill.success  { background: var(--success); }
+    .score-card-fill.warning  { background: var(--warning); }
+    .score-card-fill.danger   { background: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Loading -->
+    <div id="view-loading" class="card">
+      <div class="card-header">
+        <span class="icon">🤖</span>
+        <h1>Menganalisis Speaking Kamu</h1>
+        <p>AI sedang mengevaluasi rekaman secara mendalam</p>
+      </div>
+      <div class="card-body">
+        <div class="spinner-wrap">
+          <div class="spinner"></div>
+          <div class="spinner-text">
+            <strong>Mohon tunggu 15–30 detik...</strong><br>
+            <span style="font-size:12px;">Grammar · Pronunciation · Fluency · Vocabulary</span>
+          </div>
+        </div>
+        <div class="alert alert-info">
+          <span class="alert-icon">💡</span>
+          <span>AI sedang mendengarkan dan menganalisis jawaban kamu secara detail. Jangan tutup halaman ini.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div id="view-error" class="card" style="display:none;">
+      <div class="card-header" style="background:linear-gradient(135deg,#DC2626,#B91C1C);">
+        <span class="icon">❌</span><h1>Analisis Gagal</h1><p>Terjadi kesalahan</p>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-error"><span class="alert-icon">⚠️</span><span id="error-msg"></span></div>
+        <button class="btn btn-primary w-full" onclick="tryAgain(this)">🔄 Coba Test Lagi</button>
+      </div>
+    </div>
+
+    <!-- Too short -->
+    <div id="view-too-short" class="card" style="display:none;">
+      <div class="card-header" style="background:linear-gradient(135deg,#D97706,#B45309);">
+        <span class="icon">⏱️</span><h1>Durasi Terlalu Pendek</h1><p>Min. 1 menit untuk mendapat nilai</p>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-warning"><span class="alert-icon">⚠️</span><span>Rekaman kurang dari 60 detik. Skor tidak dapat diberikan.</span></div>
+        <button class="btn btn-primary" onclick="tryAgain(this)">🔄 Ulangi Test</button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="view-results" class="card" style="display:none;">
+      <div class="card-header">
+        <span class="icon">🏆</span>
+        <h1>Hasil Speaking Test</h1>
+        <p id="res-name" style="color:rgba(255,255,255,0.85);font-size:13px;"></p>
+      </div>
+
+      <div class="card-body">
+
+        <!-- Overall score -->
+        <div class="overall-hero">
+          <div class="label">Overall Score</div>
+          <div class="score-num" id="res-overall">0</div>
+          <div class="score-denom">/100</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:10px;">
+            <div class="level-badge" id="res-level">—</div>
+            <div id="res-cefr" style="display:none;"></div>
+          </div>
+        </div>
+
+        <!-- Info chips -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="badge badge-primary" id="res-edu"></span>
+          <span class="badge badge-primary" id="res-dur"></span>
+        </div>
+
+        <!-- Question -->
+        <div class="section-title">Pertanyaan</div>
+        <div class="question-card" style="margin-bottom:20px;">
+          <div class="question-text" id="res-question" style="font-size:14px;"></div>
+        </div>
+
+        <!-- Score grid -->
+        <div class="section-title">Skor per Kategori</div>
+        <div class="score-grid" style="margin-bottom:20px;">
+          <div class="score-card">
+            <div class="score-card-label">Fluency</div>
+            <div class="score-card-value" id="sc-fluency">0</div>
+            <div class="score-card-bar"><div class="score-card-fill" id="sf-fluency" style="width:0%"></div></div>
+          </div>
+          <div class="score-card">
+            <div class="score-card-label">Pronunciation</div>
+            <div class="score-card-value" id="sc-pronun">0</div>
+            <div class="score-card-bar"><div class="score-card-fill" id="sf-pronun" style="width:0%"></div></div>
+          </div>
+          <div class="score-card">
+            <div class="score-card-label">Grammar</div>
+            <div class="score-card-value" id="sc-grammar">0</div>
+            <div class="score-card-bar"><div class="score-card-fill" id="sf-grammar" style="width:0%"></div></div>
+          </div>
+          <div class="score-card">
+            <div class="score-card-label">Vocabulary</div>
+            <div class="score-card-value" id="sc-vocab">0</div>
+            <div class="score-card-bar"><div class="score-card-fill" id="sf-vocab" style="width:0%"></div></div>
+          </div>
+        </div>
+
+        <!-- Key Strengths -->
+        <div id="strengths-wrap" style="display:none;margin-bottom:20px;">
+          <div class="section-title">⭐ Key Strengths</div>
+          <div id="strengths-list"></div>
+        </div>
+
+        <!-- Feedback accordion (4 categories) -->
+        <div class="section-title">Feedback Detail</div>
+        <div id="feedback-list" style="margin-bottom:20px;"></div>
+
+        <!-- Grammar Corrections -->
+        <div id="grammar-corrections-wrap" style="display:none;margin-bottom:20px;">
+          <div class="section-title">✏️ Grammar Corrections</div>
+          <div style="overflow-x:auto;">
+            <table class="analysis-table" id="grammar-table">
+              <thead><tr>
+                <th style="width:36%;">What was said</th>
+                <th style="width:36%;">Corrected version</th>
+                <th>Rule</th>
+              </tr></thead>
+              <tbody id="grammar-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Pronunciation Guide -->
+        <div id="pron-guide-wrap" style="display:none;margin-bottom:20px;">
+          <div class="section-title">🔊 Pronunciation Guide</div>
+          <div style="overflow-x:auto;">
+            <table class="analysis-table" id="pron-table">
+              <thead><tr>
+                <th style="width:24%;">Word</th>
+                <th style="width:30%;">Phonetic</th>
+                <th>Tip</th>
+              </tr></thead>
+              <tbody id="pron-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Vocabulary Upgrades -->
+        <div id="vocab-wrap" style="display:none;margin-bottom:20px;">
+          <div class="section-title">📚 Vocabulary Upgrades</div>
+          <table class="analysis-table">
+            <thead><tr>
+              <th style="width:28%;">Basic word</th>
+              <th style="width:8%;"></th>
+              <th>Better alternatives</th>
+            </tr></thead>
+            <tbody id="vocab-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Filler words -->
+        <div id="filler-wrap" style="display:none;margin-bottom:20px;">
+          <div class="section-title">⚠️ Filler Words Detected</div>
+          <div class="chip-list" id="filler-list"></div>
+          <p style="font-size:12px;color:var(--text-light);margin-top:8px;">Filler words mengurangi kelancaran speaking. Coba ganti dengan jeda singkat.</p>
+        </div>
+
+        <!-- Impressive vocabulary -->
+        <div id="impressive-wrap" style="display:none;margin-bottom:20px;">
+          <div class="section-title">✨ Impressive Words Used</div>
+          <div class="chip-list" id="impressive-list"></div>
+        </div>
+
+        <!-- Overall assessment -->
+        <div id="overall-feedback-wrap" style="display:none;margin-bottom:20px;">
+          <div class="section-title">💬 Overall Assessment</div>
+          <div class="alert alert-info" style="align-items:flex-start;">
+            <span class="alert-icon" style="margin-top:2px;">🤖</span>
+            <span id="overall-feedback-text" style="line-height:1.7;font-size:13px;"></span>
+          </div>
+        </div>
+
+        <!-- Improvement Plan -->
+        <div id="plan-wrap" style="display:none;margin-bottom:20px;">
+          <div class="section-title">🎯 Improvement Plan</div>
+          <div id="plan-list"></div>
+        </div>
+
+        <!-- Encouragement -->
+        <div id="encourage-wrap" style="display:none;margin-bottom:20px;">
+          <div style="background:var(--success-light);border-radius:var(--radius-sm);padding:14px 16px;text-align:center;">
+            <p style="color:var(--success);font-size:14px;font-weight:700;margin:0;" id="encourage-text"></p>
+          </div>
+        </div>
+
+        <!-- Transcript -->
+        <div id="transcript-wrap" style="display:none;margin-bottom:20px;">
+          <div class="section-title">📄 Transkrip</div>
+          <div class="transcript-block" id="transcript-text"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="alert alert-success" style="margin-bottom:16px;">
+          <span class="alert-icon">📧</span>
+          <span>Laporan lengkap + sertifikat PDF telah dikirim ke email kamu.</span>
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-secondary" onclick="tryAgain(this)">🔄 Test Lagi</button>
+          <a id="pdf-btn" class="btn btn-primary" href="#" download>📥 Download PDF</a>
+        </div>
+        <div style="text-align:center;margin-top:12px;">
+          <a href="#" onclick="resetSession(event)" style="font-size:12px;color:var(--text-xlight);text-decoration:none;">
+            Daftar dengan akun lain →
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/js/results.js"></script>
+</body>
+</html>

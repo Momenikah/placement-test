@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>English Speaking Placement Test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="page">
+
+    <!-- Stepper: step 1 active -->
+    <div class="stepper">
+      <div class="step-item active">
+        <div class="step-dot">1</div>
+        <span class="step-label">Daftar</span>
+      </div>
+      <div class="step-item">
+        <div class="step-dot">2</div>
+        <span class="step-label">Konfirmasi</span>
+      </div>
+      <div class="step-item">
+        <div class="step-dot">3</div>
+        <span class="step-label">API Key</span>
+      </div>
+      <div class="step-item">
+        <div class="step-dot">4</div>
+        <span class="step-label">Ketentuan</span>
+      </div>
+      <div class="step-item">
+        <div class="step-dot">5</div>
+        <span class="step-label">Test</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">🎙️</span>
+        <h1>English Speaking Test</h1>
+        <p>Placement Test Assessment</p>
+      </div>
+
+      <div class="card-body">
+        <div id="alert-box" style="display:none;"></div>
+
+        <form id="reg-form" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="name">Nama Lengkap</label>
+            <input class="form-input" type="text" id="name" name="name"
+              placeholder="Masukkan nama lengkap kamu" autocomplete="name" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="email">Email</label>
+            <input class="form-input" type="email" id="email" name="email"
+              placeholder="contoh@email.com" autocomplete="email" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="whatsapp">Nomor WhatsApp</label>
+            <input class="form-input" type="tel" id="whatsapp" name="whatsapp"
+              placeholder="08xxxxxxxxxx" autocomplete="tel" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Jenjang Pendidikan</label>
+            <div class="edu-grid">
+              <label class="edu-card">
+                <input type="radio" name="education_level" value="SD" />
+                <span class="edu-label">
+                  <span class="edu-icon">🏫</span>
+                  <span class="edu-title">SD</span>
+                  <span class="edu-sub">Elementary School</span>
+                </span>
+              </label>
+              <label class="edu-card">
+                <input type="radio" name="education_level" value="SMP_SMA" />
+                <span class="edu-label">
+                  <span class="edu-icon">🎓</span>
+                  <span class="edu-title">SMP/SMA</span>
+                  <span class="edu-sub">Junior/Senior High School</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div style="margin-top:8px;">
+            <button type="submit" id="submit-btn" class="btn btn-primary">
+              <span id="btn-text">Daftar Sekarang →</span>
+              <span id="btn-spinner" class="spinner" style="display:none;width:18px;height:18px;border-width:2px;border-color:rgba(255,255,255,0.3);border-top-color:#fff;"></span>
+            </button>
+          </div>
+        </form>
+
+        <div class="divider"></div>
+
+        <ul class="instruction-list" style="margin:0;">
+          <li><span class="icon">🎤</span><span>Siapkan mikrofon yang berfungsi dengan baik</span></li>
+          <li><span class="icon">🔇</span><span>Cari tempat yang tenang sebelum memulai</span></li>
+          <li><span class="icon">⏱️</span><span>Berbicara selama <strong>1–2 menit</strong> dalam bahasa Inggris</span></li>
+          <li><span class="icon">📧</span><span>Hasil dikirim ke email + PDF sertifikat</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/register.js"></script>
+</body>
+</html>

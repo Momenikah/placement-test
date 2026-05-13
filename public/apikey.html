@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Key – Placement Test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="page">
+
+    <!-- Stepper: step 3 active -->
+    <div class="stepper">
+      <div class="step-item done">
+        <div class="step-dot">✓</div>
+        <span class="step-label">Daftar</span>
+      </div>
+      <div class="step-item done">
+        <div class="step-dot">✓</div>
+        <span class="step-label">Konfirmasi</span>
+      </div>
+      <div class="step-item active">
+        <div class="step-dot">3</div>
+        <span class="step-label">API Key</span>
+      </div>
+      <div class="step-item">
+        <div class="step-dot">4</div>
+        <span class="step-label">Ketentuan</span>
+      </div>
+      <div class="step-item">
+        <div class="step-dot">5</div>
+        <span class="step-label">Test</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="icon">🔑</span>
+        <h1>Masukkan API Key</h1>
+        <p>Diperlukan untuk analisis AI speaking kamu</p>
+      </div>
+
+      <div class="card-body">
+        <div id="alert-box" style="display:none;"></div>
+
+        <!-- BYOK explanation -->
+        <div class="byok-info">
+          <span class="byok-info-icon">🤖</span>
+          <div class="byok-info-text">
+            Tes ini menggunakan <strong>Gemini AI</strong> dari Google untuk mengevaluasi speaking kamu secara otomatis.
+            Sistem ini menggunakan model <strong>BYOK</strong> — kamu membawa API key sendiri yang <strong>gratis</strong> dan tidak disimpan di server kami.
+          </div>
+        </div>
+
+        <!-- How to get the key -->
+        <div style="margin-bottom:20px;">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-xlight);margin-bottom:10px;">Cara Mendapatkan API Key Gratis</div>
+          <ul class="next-steps" style="margin:0;">
+            <li class="next-step-item">
+              <span class="next-step-num">1</span>
+              <span>Buka <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--primary);font-weight:600;">Google AI Studio</a> (login dengan akun Google)</span>
+            </li>
+            <li class="next-step-item">
+              <span class="next-step-num">2</span>
+              <span>Klik <strong>"Create API Key"</strong> → pilih project atau buat baru</span>
+            </li>
+            <li class="next-step-item">
+              <span class="next-step-num">3</span>
+              <span>Copy API key yang dihasilkan dan paste di bawah ini</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- API key input -->
+        <form id="apikey-form" novalidate>
+          <div class="form-group" style="margin-bottom:8px;">
+            <label class="form-label" for="api-key">
+              Gemini API Key
+              <span class="badge badge-primary" style="font-size:10px;margin-left:6px;vertical-align:middle;">BYOK</span>
+            </label>
+            <div class="api-key-wrap">
+              <input class="form-input" type="password" id="api-key"
+                placeholder="AIzaSy..." autocomplete="off" spellcheck="false" required />
+              <button type="button" class="api-key-toggle" id="eye-btn" onclick="toggleKey()" title="Show/hide">
+                <span id="eye-icon">👁️</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="alert alert-success" style="margin-bottom:18px;font-size:12px;">
+            <span class="alert-icon">🔒</span>
+            <span>Key <strong>tidak disimpan</strong> di database kami — hanya dipakai saat analisis berlangsung dan langsung dihapus dari memori.</span>
+          </div>
+
+          <button type="submit" id="submit-btn" class="btn btn-primary">
+            <span id="btn-text">Lanjut ke Syarat & Ketentuan →</span>
+            <span id="btn-spinner" class="spinner" style="display:none;width:18px;height:18px;border-width:2px;border-color:rgba(255,255,255,0.3);border-top-color:#fff;"></span>
+          </button>
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="/js/apikey.js"></script>
+</body>
+</html>
