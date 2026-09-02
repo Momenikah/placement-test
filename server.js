@@ -19,7 +19,6 @@ app.use('/api/results', require('./routes/results'));
 const page = (f) => (_, res) => res.sendFile(path.join(__dirname, 'public', f));
 app.get('/',         page('index.html'));
 app.get('/thankyou', page('thankyou.html'));
-app.get('/apikey',   page('apikey.html'));
 app.get('/tnc',      page('tnc.html'));
 app.get('/test',     page('test.html'));
 app.get('/results',  page('results.html'));

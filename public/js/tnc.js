@@ -1,6 +1,6 @@
-// Session guard — must have apiKey
+// Session guard
 const session = JSON.parse(localStorage.getItem('pt_session') || 'null');
-if (!session?.registrationId || !session?.apiKey) window.location.href = '/';
+if (!session?.registrationId) window.location.href = '/';
 
 const agreeBtn = document.getElementById('agree-btn');
 const hint     = document.getElementById('progress-hint');

@@ -4,3 +4,4 @@ uploads/
 *.log
 credentials/
 *-service-account.json
+VPS_AUDIT_SUMMARY.md

@@ -1,5 +1,9 @@
 const express = require('express');
 const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const { spawn } = require('child_process');
 const router = express.Router();
 const pool = require('../db/connection');
 const { analyzeAudio } = require('../services/gemini');
@@ -11,6 +15,27 @@ const upload = multer({
   limits: { fileSize: 60 * 1024 * 1024 }, // 60MB max
 });
 
+const UPLOADS_DIR = path.join(__dirname, '..', 'public', 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+// kie.ai's Gemini wrapper rejects webm; transcode to mp3 with ffmpeg first.
+function transcodeToMp3(inputPath, outputPath) {
+  return new Promise((resolve, reject) => {
+    const ff = spawn('ffmpeg', [
+      '-y', '-i', inputPath,
+      '-vn', '-acodec', 'libmp3lame', '-b:a', '64k', '-ac', '1',
+      outputPath,
+    ]);
+    let stderr = '';
+    ff.stderr.on('data', (d) => { stderr += d.toString(); });
+    ff.on('error', (e) => reject(new Error('ffmpeg spawn failed: ' + e.message)));
+    ff.on('close', (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`ffmpeg exited ${code}: ${stderr.slice(-300)}`));
+    });
+  });
+}
+
 function getLevel(score) {
   if (score >= 85) return 'Advanced';
   if (score >= 70) return 'Upper Intermediate';
@@ -20,7 +45,7 @@ function getLevel(score) {
 }
 
 router.post('/submit', upload.single('audio'), async (req, res) => {
-  const { registrationId, duration, mimeType, apiKey } = req.body;
+  const { registrationId, duration, mimeType } = req.body;
 
   if (!registrationId) {
     return res.status(400).json({ error: 'Registration ID diperlukan.' });
@@ -72,16 +97,32 @@ router.post('/submit', upload.single('audio'), async (req, res) => {
     res.json({ success: true, resultId, processing: true });
 
     // Async AI analysis (after response is sent)
+    let rawFilePath = null;
+    let mp3FilePath = null;
+    let mp3Filename = null;
     try {
-      const audioBase64 = req.file.buffer.toString('base64');
       const cleanMime = (mimeType || req.file.mimetype || 'audio/webm').split(';')[0];
+      const ext = (cleanMime.split('/')[1] || 'webm').replace(/[^a-z0-9]/gi, '');
+      const uuid = crypto.randomUUID();
+      const rawFilename = `${uuid}.${ext}`;
+      mp3Filename = `${uuid}.mp3`;
+      rawFilePath = path.join(UPLOADS_DIR, rawFilename);
+      mp3FilePath = path.join(UPLOADS_DIR, mp3Filename);
+
+      fs.writeFileSync(rawFilePath, req.file.buffer);
+      await transcodeToMp3(rawFilePath, mp3FilePath);
+      // raw no longer needed once mp3 is produced
+      fs.unlink(rawFilePath, () => {});
+      rawFilePath = null;
+
+      const baseUrl = (process.env.BASE_URL || `http://localhost:${process.env.PORT || 3000}`).replace(/\/$/, '');
+      const audioUrl = `${baseUrl}/uploads/${mp3Filename}`;
 
       const analysis = await analyzeAudio(
-        audioBase64,
-        cleanMime,
+        audioUrl,
+        'audio/mpeg',
         registration.question,
-        registration.education_level,
-        apiKey || null
+        registration.education_level
       );
 
       const overallScore = Math.round(
@@ -124,11 +165,21 @@ router.post('/submit', upload.single('audio'), async (req, res) => {
         .catch(err => console.error('Sheet append error:', err.message));
 
     } catch (analysisErr) {
-      console.error('Gemini analysis error:', analysisErr.message);
+      console.error('AI analysis error:', analysisErr.message);
       await pool.query(
         `UPDATE test_results SET status = 'failed', error_message = $1 WHERE id = $2`,
         [analysisErr.message, resultId]
       );
+    } finally {
+      if (rawFilePath) fs.unlink(rawFilePath, () => {});
+      if (mp3FilePath) {
+        // Delete mp3 after a delay so kie.ai's fetch has time to complete
+        setTimeout(() => {
+          fs.unlink(mp3FilePath, (err) => {
+            if (err) console.warn('Audio cleanup failed:', err.message);
+          });
+        }, 60_000);
+      }
     }
   } catch (err) {
     console.error('Submit route error:', err.message);

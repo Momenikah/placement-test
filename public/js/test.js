@@ -1,6 +1,6 @@
 // ── Session guard ──
 const session = JSON.parse(localStorage.getItem('pt_session') || 'null');
-if (!session?.registrationId || !session?.apiKey || !session?.tncAgreed) {
+if (!session?.registrationId || !session?.tncAgreed) {
   window.location.href = '/';
 }
 
@@ -212,20 +212,15 @@ async function submitRecording() {
     formData.append('registrationId', session.registrationId);
     formData.append('duration', String(elapsedSeconds));
     formData.append('mimeType', recordedMimeType);
-    if (session.apiKey) formData.append('apiKey', session.apiKey);
-
     const res  = await fetch('/api/test/submit', { method: 'POST', body: formData });
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || 'Upload gagal.');
 
-    // Keep user info so "Test Lagi" can skip the form;
-    // drop test-specific data (registrationId, question) so a fresh registration is made next time.
     localStorage.setItem('pt_session', JSON.stringify({
       name:           session.name,
       email:          session.email,
       whatsapp:       session.whatsapp,
       educationLevel: session.educationLevel,
-      apiKey:         session.apiKey,
       tncAgreed:      session.tncAgreed,
     }));
     window.location.href = `/results?id=${data.resultId}`;

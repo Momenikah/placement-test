@@ -1,73 +1,78 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
-// ── Model fallback chain (primary → fallbacks if overloaded) ──
-const MODEL_CHAIN = [
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-2.0-flash',
-  'gemini-2.0-flash-lite',
-];
-
-const MAX_RETRIES_PER_MODEL = 3;
+const KIE_ENDPOINT = 'https://api.kie.ai/gemini-2.5-flash/v1/chat/completions';
+const MAX_RETRIES = 3;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// True if the error is transient (overload / network) and worth retrying
-function isRetryable(err) {
-  const msg = String(err?.message || '');
-  const status = err?.status || err?.statusCode;
-  if (status === 503 || status === 429 || status === 500) return true;
-  return /503|429|overload|unavailable|high demand|temporarily|try again|fetch failed|ECONN|ETIMEDOUT/i.test(msg);
+function isRetryable(status, msg) {
+  if (status === 503 || status === 429 || status === 500 || status === 502 || status === 504) return true;
+  return /overload|unavailable|temporarily|try again|fetch failed|ECONN|ETIMEDOUT/i.test(msg || '');
 }
 
-async function callModel(genAI, modelName, audioBase64, mimeType, prompt) {
-  const model = genAI.getGenerativeModel({ model: modelName });
-  const result = await model.generateContent([
-    { inlineData: { mimeType, data: audioBase64 } },
-    { text: prompt },
-  ]);
-  return result.response.text().trim();
-}
+async function callKie(apiKey, audioUrl, prompt) {
+  const body = {
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          { type: 'image_url', image_url: { url: audioUrl } },
+        ],
+      },
+    ],
+    stream: false,
+  };
 
-// Try each model in the chain with exponential backoff on retryable errors
-async function generateWithFallback(genAI, audioBase64, mimeType, prompt) {
-  let lastErr;
-  for (const modelName of MODEL_CHAIN) {
-    for (let attempt = 1; attempt <= MAX_RETRIES_PER_MODEL; attempt++) {
-      try {
-        const text = await callModel(genAI, modelName, audioBase64, mimeType, prompt);
-        if (attempt > 1 || modelName !== MODEL_CHAIN[0]) {
-          console.log(`✓ Gemini OK with ${modelName} (attempt ${attempt})`);
-        }
-        return text;
-      } catch (err) {
-        lastErr = err;
-        const retryable = isRetryable(err);
-        console.warn(`Gemini ${modelName} attempt ${attempt} failed: ${err.message?.substring(0, 120)}`);
+  const resp = await fetch(KIE_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
 
-        if (!retryable) throw err; // non-transient → bail immediately
-        if (attempt < MAX_RETRIES_PER_MODEL) {
-          await sleep(attempt * 2000); // 2s, 4s, 6s backoff
-        }
-      }
-    }
-    // exhausted retries on this model → try next
+  const text = await resp.text();
+  if (!resp.ok) {
+    const err = new Error(`kie.ai error ${resp.status}: ${text.substring(0, 300)}`);
+    err.status = resp.status;
+    throw err;
   }
 
-  // All models exhausted
-  const err = new Error(
-    'Layanan AI sedang sibuk (semua model fallback overload). ' +
-    'Mohon coba lagi dalam 2–5 menit.'
-  );
+  let parsed;
+  try { parsed = JSON.parse(text); }
+  catch { throw new Error('kie.ai returned non-JSON: ' + text.substring(0, 200)); }
+
+  const content = parsed?.choices?.[0]?.message?.content;
+  if (!content) throw new Error('kie.ai response missing content: ' + text.substring(0, 200));
+  return typeof content === 'string' ? content.trim() : String(content).trim();
+}
+
+async function generateWithRetry(apiKey, audioUrl, prompt) {
+  let lastErr;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const out = await callKie(apiKey, audioUrl, prompt);
+      if (attempt > 1) console.log(`✓ kie.ai OK (attempt ${attempt})`);
+      return out;
+    } catch (err) {
+      lastErr = err;
+      console.warn(`kie.ai attempt ${attempt} failed: ${err.message?.substring(0, 160)}`);
+      if (!isRetryable(err.status, err.message)) throw err;
+      if (attempt < MAX_RETRIES) await sleep(attempt * 2000);
+    }
+  }
+  const err = new Error('Layanan AI sedang sibuk. Mohon coba lagi dalam 2–5 menit.');
   err.cause = lastErr;
   throw err;
 }
 
-async function analyzeAudio(audioBase64, mimeType, question, educationLevel, apiKey) {
-  const key = apiKey || process.env.GEMINI_API_KEY;
-  if (!key) throw new Error('Gemini API key tidak ditemukan.');
-
-  const genAI = new GoogleGenerativeAI(key);
+async function analyzeAudio(audioUrl, mimeType, question, educationLevel) {
+  const key = process.env.KIE_API_KEY;
+  if (!key) throw new Error('KIE_API_KEY tidak ditemukan di .env.');
+  if (!/^https?:\/\//i.test(audioUrl)) {
+    throw new Error('audioUrl harus berupa URL publik (http/https), bukan: ' + audioUrl.substring(0, 60));
+  }
 
   const isSD = educationLevel === 'SD';
   const levelDesc = isSD
@@ -170,7 +175,7 @@ IMPORTANT:
 - Strengths and improvement_plan must be specific to THIS student's speech
 - Be constructive and encouraging throughout`;
 
-  const raw = await generateWithFallback(genAI, audioBase64, mimeType, prompt);
+  const raw = await generateWithRetry(key, audioUrl, prompt);
   const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
   let parsed;
@@ -179,10 +184,9 @@ IMPORTANT:
   } catch {
     const match = cleaned.match(/\{[\s\S]*\}/);
     if (match) parsed = JSON.parse(match[0]);
-    else throw new Error('Gagal parse respons Gemini: ' + raw.substring(0, 300));
+    else throw new Error('Gagal parse respons kie.ai: ' + raw.substring(0, 300));
   }
 
-  // Ensure arrays exist even if Gemini omits them
   parsed.fluency.filler_words        = parsed.fluency.filler_words        || [];
   parsed.fluency.strengths           = parsed.fluency.strengths           || [];
   parsed.fluency.improvements        = parsed.fluency.improvements        || [];
